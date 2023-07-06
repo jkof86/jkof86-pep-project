@@ -31,13 +31,24 @@ public class SocialMediaController {
      */
     public Javalin startAPI() {
         Javalin app = Javalin.create();
-        //app.get("example-endpoint", this::exampleHandler);
+
+        //ACCOUNTS
         app.get("accounts", this::getAllAccountsHandler);
         app.post("register", this::registrationHandler);
         app.post("login", this::loginHandler);
 
+        //MESSAGES
+        app.get("messages", this::getAllMessagesHandler);
+        app.get("messages/{message_id}", this::getMessageByIdHandler);
+        app.get("accounts/{account_id}/messages", this::getAllMessagesByAccountIdHandler);
+        app.post("messages", this::createNewMessageHandler);
+        app.delete("messages/{message_id}", this::deleteMessageByIdHandler);
+        app.patch("messages/{message_id}", this::updateMessageByIdHandler);
+      
         return app;
     }
+
+    //ACCOUNTS
 
     /**
      * This is an example handler for an example endpoint.
@@ -90,6 +101,22 @@ public class SocialMediaController {
             context.json(result);
         }
         
+    }
+
+
+    //MESSAGES
+    
+    private void getAllMessagesHandler(Context context) {
+    }
+    private void getMessageByIdHandler(Context context) {
+    }
+    private void getAllMessagesByAccountIdHandler(Context context) {
+    }
+    private void deleteMessageByIdHandler(Context context) {
+    }
+    private void updateMessageByIdHandler(Context context) {
+    }
+    private void createNewMessageHandler(Context context) {
     }
   
 
