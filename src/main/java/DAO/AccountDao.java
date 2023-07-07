@@ -22,7 +22,7 @@ public class AccountDao {
             PreparedStatement preparedStatement = conn.prepareStatement(sql);
             ResultSet rs = preparedStatement.executeQuery();
             while (rs.next()) {
-                Account a = new Account(rs.getString("username"),
+                Account a = new Account(rs.getInt("account_id"), rs.getString("username"),
                         rs.getString("password"));
 
                 accounts.add(a);
