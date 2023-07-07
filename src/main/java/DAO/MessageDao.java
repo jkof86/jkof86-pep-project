@@ -8,10 +8,16 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import Model.Account;
 import Model.Message;
+import Service.AccountService;
+import Service.MessageService;
 import Util.ConnectionUtil;
 
 public class MessageDao {
+
+    public AccountService accountService;
+    private MessageService messageService;
 
     public List<Message> getAllMessages() {
         /*
@@ -192,6 +198,40 @@ public class MessageDao {
          * If the creation of the message is not successful, the response status should
          * be 400. (Client error)
          */
+        boolean b = false;
+
+        // initial message validation
+        if (m.getMessage_text() == "" || m.getMessage_text().length() > 254) {
+            return null;
+        }
+        // iterate through account list and search for existing posted_by
+        for (Account i : accountService.getAllAccounts()) {
+
+            // if a matching account_id is found, we can set flag to true
+            if (i.getAccount_id() == m.getPosted_by()) {
+                b = true;
+            }
+        }
+
+        if (b) {
+            Connection conn = ConnectionUtil.getConnection();
+            try {
+                // Write SQL logic here
+                String sql = "insert into Message (posted_by, message_text, time_posted_epoch) values (?,?,?)";
+                PreparedStatement preparedStatement = conn.prepareStatement(sql);
+                preparedStatement.setInt(1, m.getPosted_by());
+                preparedStatement.setString(2, m.getMessage_text());
+                preparedStatement.setLong(3, m.getTime_posted_epoch());
+
+                preparedStatement.execute();
+
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+
+            //return an obj of the new, inserted message
+            return messageService.getMessageById(m.getMessage_id());
+        }
         return null;
     }
 
