@@ -178,7 +178,25 @@ public class MessageDao {
          * If the update of the message is not successful for any reason, the response
          * status should be 400. (Client error)
          */
-        return null;
+        Connection conn = ConnectionUtil.getConnection();
+        try {
+            // Write SQL logic here
+            String sql = "update Message set message_text = ? where message_id = ?";
+            PreparedStatement preparedStatement = conn.prepareStatement(sql);
+
+            preparedStatement.setString(1, m.getMessage_text());
+            preparedStatement.setInt(2, m.getMessage_id());
+
+            // failed message update
+            if (preparedStatement.executeUpdate() == 0) {
+                return null;
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        // return updated Message obj
+        return getMessageById(m.getMessage_id());
     }
 
     public Message createNewMessage(Message m) {
@@ -198,40 +216,35 @@ public class MessageDao {
          * If the creation of the message is not successful, the response status should
          * be 400. (Client error)
          */
-        boolean b = false;
 
-        // initial message validation
-        if (m.getMessage_text() == "" || m.getMessage_text().length() > 254) {
-            return null;
-        }
-        // iterate through account list and search for existing posted_by
-        for (Account i : accountService.getAllAccounts()) {
+        Connection conn = ConnectionUtil.getConnection();
+        try {
+            // Write SQL logic here
+            String sql = "insert into Message (posted_by, message_text, time_posted_epoch) values (?,?,?)";
+            PreparedStatement preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
-            // if a matching account_id is found, we can set flag to true
-            if (i.getAccount_id() == m.getPosted_by()) {
-                b = true;
-            }
-        }
+            preparedStatement.setInt(1, m.getPosted_by());
+            preparedStatement.setString(2, m.getMessage_text());
+            preparedStatement.setLong(3, m.getTime_posted_epoch());
 
-        if (b) {
-            Connection conn = ConnectionUtil.getConnection();
-            try {
-                // Write SQL logic here
-                String sql = "insert into Message (posted_by, message_text, time_posted_epoch) values (?,?,?)";
-                PreparedStatement preparedStatement = conn.prepareStatement(sql);
-                preparedStatement.setInt(1, m.getPosted_by());
-                preparedStatement.setString(2, m.getMessage_text());
-                preparedStatement.setLong(3, m.getTime_posted_epoch());
-
-                preparedStatement.execute();
-
-            } catch (SQLException e) {
-                System.out.println(e.getMessage());
+            // failed message creation
+            if (preparedStatement.executeUpdate() == 0) {
+                return null;
             }
 
-            //return an obj of the new, inserted message
-            return messageService.getMessageById(m.getMessage_id());
+            // collect the generated account id and assign to the obj
+            // then return updated obj
+            ResultSet rs = preparedStatement.getGeneratedKeys();
+            if (rs.next()) {
+                int generated_account_id = rs.getInt(1);
+                return new Message(generated_account_id, m.getPosted_by(), m.getMessage_text(),
+                        m.getTime_posted_epoch());
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
         }
+
         return null;
     }
 

@@ -178,7 +178,27 @@ public class SocialMediaController {
         }
     }
 
-    private void updateMessageByIdHandler(Context context) {
+    private void updateMessageByIdHandler(Context context) throws JsonMappingException, JsonProcessingException {
+        // grab id from path param and store in int id
+        int id = Integer.parseInt(context.pathParam("message_id"));
+
+        // create mapper and convert request body into Message obj
+        ObjectMapper mapper = new ObjectMapper();
+        Message m = mapper.readValue(context.body(), Message.class);
+
+        //assign id from path variable to the created message obj
+        m.setMessage_id(id);
+
+        // perform operation to delete message by a given ID
+        Message result = messageService.updateMessageById(m);
+
+        // if result is NOT null, response should have the message result
+        if (result != null) {
+            context.json(result);
+            context.status(200);
+        } else {
+            context.status(400);
+        }
 
     }
 
